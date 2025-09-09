@@ -132,5 +132,8 @@ Contributions are welcome! 🎉
 If you have questions, open an issue on GitHub or contact me at **[slukaivars@gmail.com](mailto:slukaivars@gmail.com)**.  
 
 ---
+<div align="center"> 
 
 ✨ Enjoy the game and may the best player win! ✨  
+
+</div>
