@@ -38,6 +38,15 @@
 
       <div class="game-status" id="gameStatus">Your turn - click a cell!</div>
 
+      <div class="lobby-bar">
+        <input
+          id="lobbyIdInput"
+          placeholder="Lobby ID (e.g., 1234 or friends-room)"
+        />
+        <button class="btn" id="joinLobbyBtn">Join Lobby</button>
+        <span id="yourMark"></span>
+      </div>
+
       <div class="board-container">
         <div class="board" id="gameBoard"></div>
       </div>
@@ -51,6 +60,10 @@
       </div>
     </div>
 
-    <script src="script.js?v=2.2"></script>
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="script.js?v=2.3"></script>
   </body>
 </html>
