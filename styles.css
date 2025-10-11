@@ -86,6 +86,31 @@ body {
   text-shadow: 0 0 10px#00ffff;
 }
 
+.lobby-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 20px;
+  flex-wrap: wrap;
+}
+
+.lobby-bar input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 2px solid #00ffff;
+  background: #0a0a0a;
+  color: #00ffff;
+  font-family: inherit;
+  min-width: 220px;
+}
+
+.lobby-bar span {
+  min-width: 120px;
+  text-align: center;
+  font-weight: bold;
+}
+
 .game-status-x-win,
 .game-status-draw,
 .game-status-o-win {
