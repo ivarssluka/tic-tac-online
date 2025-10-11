@@ -134,6 +134,6 @@ If you have questions, open an issue on GitHub or contact me at **[slukaivars@gm
 ---
 <div align="center"> 
 
-✨ Enjoy the game and may the best player win! ✨  
+<p> ✨ Enjoy the game and may the best player win! ✨ </p>
 
 </div>
