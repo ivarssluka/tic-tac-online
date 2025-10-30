@@ -1,15 +1,17 @@
-let gameMode = "pvc";
-let currentPlayer = "X";
-let computerStartsFirst = false;
-let playerXStartsFirst = true;
-let difficulty = "medium";
+// Noklusējuma uzstādījumi
+let gameMode = "pvc"; // Spēle pret datoru
+let currentPlayer = "X"; // 'X' ir noklusējuma simbols
+let computerStartsFirst = false; // Spēlētājs vienmēr sāk(spēlējot pret datoru)
+let playerXStartsFirst = true; // 'X' uzsāk gājienu
+let difficulty = "medium"; // Sarežģītības pakāpe = 'vidēja'
 
-// Multiplayer wiring
+// Jauni mainīgie iespējai spēlēt no divām dažādām ierīcēm.
 let socket = null;
 let onlineMode = false;
 let currentLobbyId = null;
 let myMark = null;
 
+// Spēles tehnisko elementu saraksts.
 const toggleModeBtn = document.getElementById("toggleModeBtn");
 const currentModeDisplay = document.getElementById("currentMode");
 const difficultyBtn = document.getElementById("difficultyBtn");
@@ -29,21 +31,24 @@ const joinLobbyBtn = document.getElementById("joinLobbyBtn");
 const lobbyIdInput = document.getElementById("lobbyIdInput");
 const yourMarkDisplay = document.getElementById("yourMark");
 
+// Atverot programmu tiek uzģenerēts spēles laukums ar 9 tukšām(null) šūnām, kurās var iezīmēt savu simbolu.
 let currentGameBoard = Array(9).fill(null);
 let isGameCurrentlyActive = true;
 let isProcessingMove = false;
 
+// Uzvarošo kombināciju saraksts ar attiecīgu šūnu indeksāciju uz spēles laukuma.
 const winningCombinations = [
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  [0, 4, 8],
-  [2, 4, 6],
+  [0, 1, 2], // Augšējā rinda
+  [3, 4, 5], // Vidējā rinda
+  [6, 7, 8], // Apakšējā rinda
+  [0, 3, 6], // Kreisā kolonna
+  [1, 4, 7], // Vidējā kolonna
+  [2, 5, 8], // Labā kolonna
+  [0, 4, 8], // Diognāle '\'
+  [2, 4, 6], // Diognāle '/'
 ];
 
+// Elements spēles statistikas uzskaitei (uzsākot spēli vienmēr būs '0')
 let gameStatistics = {
   player: 0,
   computer: 0,
@@ -53,18 +58,21 @@ let gameStatistics = {
   totalGames: 0,
 };
 
+// Palīgfunkcija, kas iespējo lietotāja gājienu
 function enablePlayerClicks() {
   [...gameBoard.children].forEach((cell) => {
     cell.addEventListener("click", handlePlayerMove);
   });
 }
 
+// Palīgfunkcija, kas atspējo lietotāja gājienu (jāsagaida, kad otrs spēlētājs veiks gājienu)
 function disablePlayerClicks() {
   [...gameBoard.children].forEach((cell) => {
     cell.removeEventListener("click", handlePlayerMove);
   });
 }
 
+// Funkcija, kas informē par aktīvo spēles režīmu interfeisā (Spēlētājs pret spēlētāju / spēlētājs pret datoru / online)
 function updateModeDisplay() {
   if (onlineMode && currentLobbyId) {
     currentModeDisplay.textContent = `Mode: Online PvP (Lobby ${currentLobbyId})`;
@@ -98,6 +106,7 @@ function updateModeDisplay() {
   }
 }
 
+// Funkcija, ar kuras palīdzību nomainīt spēles režīmu (poga "Switch to PvP/PvC")
 function toggleGameMode() {
   if (onlineMode) {
     leaveLobby();
@@ -118,13 +127,16 @@ function toggleGameMode() {
     totalGames: 0,
   };
 
-  updateModeDisplay();
+  // Mainot spēles režīmu automātiski tiek nomainīts teksts uz pogas un attiecīgajās sadaļās, kā arī'
+  // tiek uzģenerēts jauns laukums ar tukšām šūnām.
+  updateModeDisplay(); 
   updateToggleButtonText();
   updateStatLabels();
   updateStatistics();
   creategameBoard();
 }
 
+// Funkcija atjauno spēlētāju lomas interfeisā atkarīgi no spēles režīma.
 function updateStatLabels() {
   if (gameMode === "pvp") {
     player1Label.innerHTML = "<strong>Player 'X'</strong>";
@@ -135,6 +147,7 @@ function updateStatLabels() {
   }
 }
 
+// Funkcija ar kuras palīdzību PvP režīmā var izvēlēties, kurš uzsāk spēli ("O" vai "X")
 function togglePvPStarter() {
   playerXStartsFirst = !playerXStartsFirst;
   updateToggleButtonText();
@@ -143,6 +156,7 @@ function togglePvPStarter() {
   }
 }
 
+// PvC režīmā izvēle starp spēlētāju un datoru, kurš sāk pirmais.
 function toggleComputerStarter() {
   computerStartsFirst = !computerStartsFirst;
   updateToggleButtonText();
@@ -151,6 +165,7 @@ function toggleComputerStarter() {
   }
 }
 
+// Funkcija, kas aktivizē iepriekšējās 2 funkcijas atkarībā no izvēlētā spēles režīma.
 function toggleStarter() {
   if (gameMode === "pvp") {
     togglePvPStarter();
@@ -159,6 +174,7 @@ function toggleStarter() {
   }
 }
 
+// Funkcija, kas dinamiski nomaina tekstu gan pogai gan aktīvā spēlētāja laukam
 function updateToggleButtonText() {
   const toggleStartBtn = document.getElementById("toggleStartBtn");
   if (toggleStartBtn) {
@@ -186,6 +202,7 @@ function updateToggleButtonText() {
   }
 }
 
+// Funkcija, kas maina sarežģītības līmeni
 function toggleDifficulty() {
   if (onlineMode) return;
   const difficulties = ["easy", "medium", "hard"];
@@ -332,9 +349,7 @@ function joinLobby(lobbyId) {
       updateModeDisplay();
       try {
         localStorage.setItem("lastLobbyId", currentLobbyId);
-      } catch (err) {
-        // Ignore storage errors (e.g., privacy mode)
-      }
+      } catch (err) {}
     }
     if (room.yourMark) {
       myMark = room.yourMark;
@@ -420,6 +435,7 @@ function creategameBoard() {
   }
 }
 
+// Funkcija, kas novieto izvēlēto simbolu uz laukuma.
 function drawMarkOnBoard(boardPosition, playerMark) {
   const targetCell = gameBoard.children[boardPosition];
 
@@ -437,6 +453,7 @@ function drawMarkOnBoard(boardPosition, playerMark) {
   }, 1000);
 }
 
+// Funkcija, kas pārvalda spēlētāja gājienu.
 function handlePlayerMove(click) {
   const index = click.target.dataset.index;
   if (!isGameCurrentlyActive || currentGameBoard[index] || isProcessingMove)
@@ -514,6 +531,7 @@ function handlePlayerMove(click) {
   }, 1000);
 }
 
+// Funkcija datora gājienam, kas meklē kritisko situāciju(spēlētājam ir 2 vienādi simboli rindā/kolonnā/diognālē)
 function findCriticalMove(targetPlayer, count) {
   for (let combination of winningCombinations) {
     let [a, b, c] = combination;
@@ -539,6 +557,8 @@ function findCriticalMove(targetPlayer, count) {
   return null;
 }
 
+// Minimax algoritms, kas pēc katra gājiena analizē visus iespējamos scenārijus un izvēlās optimālo tālāko gājienu.
+// Šāda tipa algoritmu izmanto arī šaha/dambretes un citu stratēģisko spēļu datora loģikai. 
 function minimax(board, depth, isMaximizing, maxPlayer = "O") {
   const minPlayer = maxPlayer === "X" ? "O" : "X";
   const winner = checkWinner(board);
@@ -586,6 +606,7 @@ function minimax(board, depth, isMaximizing, maxPlayer = "O") {
   return moves[bestMove];
 }
 
+// Funkcija, kas pārbauda vai uz lauka ir kāda no uzvarošajām kombinācijām.
 function checkWinner(board) {
   for (let combo of winningCombinations) {
     const [a, b, c] = combo;
@@ -596,16 +617,19 @@ function checkWinner(board) {
   return null;
 }
 
+// Šī funkcija pārbauda vai visas spēļu laukuma šūnas ir aizņemtas ar simboliem.
 function isBoardFull(board) {
   return board.every((cell) => cell !== null);
 }
 
+// Šī funkcija atgriež visus tukšo lauku indeksus, lai dators nekļūdīgi var izvēlēties nākamo gājienu.
 function getEmptyIndices(board) {
   return board
     .map((value, index) => (value === null ? index : null))
     .filter((index) => index !== null);
 }
 
+// Funkcija, kas pārvalda datora gājienus, atkarīgi no izvēlētās grūtības pakāpes.
 function handleComputerMove() {
   if (onlineMode) return;
   if (!isGameCurrentlyActive) return;
@@ -615,15 +639,18 @@ function handleComputerMove() {
 
   let moveIndex = null;
 
+  // Vieglākajā (easy) līmenī, dators izdara gājienu nejauši izvēloties vienu no brīvajām šūnām.
   if (difficulty === "easy") {
     moveIndex = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+  // Vidējā (medium) līmenī tiek pievienota 'findCriticalMove' funkcija, kas spēlētājam neļauj tik viegli uzvarēt.
+  // Taču ja datoram ir iespēja uzvarēt, tas izvēlēsies šo gājienu.
   } else if (difficulty === "medium") {
     moveIndex = findCriticalMove("O", 2);
 
     if (moveIndex === null) {
       moveIndex = findCriticalMove("X", 2);
     }
-
+  // Vidējas grūtības pakāpei prioritāte tiek piešķirta centram, tad stūriem, pēc tam sāniem.
     if (moveIndex === null) {
       const center = 4;
       const corners = [0, 2, 6, 8];
@@ -642,6 +669,7 @@ function handleComputerMove() {
         }
       }
     }
+    // Grūtākajā līmenī tiek pieslēgts "minimax" algoritms, kurš vienmēr izvēlēsies optimālāko gājienu savā labā.
   } else if (difficulty === "hard") {
     const result = minimax(currentGameBoard, 0, true, "O");
     moveIndex = result.index;
@@ -686,12 +714,14 @@ function handleComputerMove() {
   }, 1000);
 }
 
+// Funkcija, kas nosaka uzvarētāju, salīdzinot spēles simbolus('O' vai 'X') ar uzvarošajām kombinācijām.
 function determineWinner(player) {
   return winningCombinations.some((combo) =>
     combo.every((index) => currentGameBoard[index] === player)
   );
 }
 
+// Funkcija, kas atgriež uzvarošo kombināciju, ja tāda ir.
 function getWinningCombination(player) {
   for (let combo of winningCombinations) {
     if (combo.every((index) => currentGameBoard[index] === player)) {
@@ -701,10 +731,12 @@ function getWinningCombination(player) {
   return null;
 }
 
+// Funkcija, kas pārbauda vai visas šūnas uz laukuma ir aizņemtas, lai varētu izvērtēt spēles iznākumu.
 function isGameOver() {
   return currentGameBoard.every((cell) => cell !== null);
 }
 
+// Funkcija, ar kuras palīdzību tiek atjaunoti dati spēles statistikas sadaļā.
 function updateStatistics() {
   if (gameMode === "pvp") {
     player1Wins.textContent = gameStatistics.playerX;
@@ -762,7 +794,6 @@ if (lobbyIdInput) {
       lobbyIdInput.value = last;
     }
   } catch (err) {
-    // ignore storage issues
   }
 }
 
